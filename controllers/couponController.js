@@ -31,7 +31,7 @@ const redeemCoupon = (req, res) => {
       if (err) return res.status(500).send({ error: err.message });
       
       // Update coupon redemption count
-      const updateQuery = `UPDATE Coupons SET redemption_count = redemption_count + 1 WHERE coupon_id = ?`;
+      const updateQuery = `UPDATE Coupons SET redemption_count = COALESCE(redemption_count, 0) + 1, max_redemptions = max_redemptions - 1 WHERE coupon_id = ? AND max_redemptions > 0`;
       connection.query(updateQuery, [coupon.coupon_id], (err, result) => {
         if (err) return res.status(500).send({ error: err.message });
         res.status(200).send({ message: 'Coupon redeemed successfully' });
