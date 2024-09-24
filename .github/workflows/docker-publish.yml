@@ -15,13 +15,15 @@ on:
   #   branches: [ "main" ]
 
 jobs:
-  build:
+  publish_images:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Build image
         run: docker build . -t johnpaulmanoza/coupoun-app-backend:latest
+        
       - name: Push image to DockerHub
         run: |
           docker login -u johnpaulmanoza -p ${{ secrets.DOCKER_HUB_TOKEN }}
