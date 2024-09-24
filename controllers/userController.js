@@ -27,7 +27,7 @@ const login = (req, res) => {
 
     if (!validPassword) return res.status(401).send({ message: 'Invalid password' });
 
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
+    const token = jwt.sign({ user_id: user.user_id, role_id: user.role_id  }, process.env.JWT_SECRET);
     res.status(200).send({ token });
   });
 };
