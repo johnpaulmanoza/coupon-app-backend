@@ -13,7 +13,7 @@ const authenticate = (req, res, next) => {
 };
 
 const authorizeMerchant = (req, res, next) => {
-  if (req.user.role !== 'merchant') {
+  if (req.user.role_id !== 2) { // 2 = merchant
     return res.status(403).send({ message: 'Forbidden' });
   }
   next();
