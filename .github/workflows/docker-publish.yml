@@ -14,21 +14,15 @@ on:
   # pull_request:
   #   branches: [ "main" ]
 
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Build image
         run: docker build . -t johnpaulmanoza/coupoun-app-backend:latest
-        
-      - name: Push image to 
+      - name: Push image to DockerHub
+        run: |
+          docker login -u johnpaulmanoza -p ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push johnpaulmanoza/coupoun-app-backend:latest
