@@ -30,7 +30,7 @@ jobs:
       # 2. Build Image
       - name: Build image
         run: | 
-          docker build . -t ${{ secrets.DOCKER_HUB_USERNAME }}/coupoun-app-backend:latest .
+          docker build . -t ${{ secrets.DOCKER_HUB_USERNAME }}/coupoun-app-backend:latest
         
       # 3. Push Image  
       - name: Push image to DockerHub
