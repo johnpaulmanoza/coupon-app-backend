@@ -8,23 +8,65 @@ name: Docker
 on:
   [workflow_dispatch]
   # push:
-  #   branches: [ "main" ]
-  #   # Publish semver tags as releases.
-  #   tags: [ 'v*.*.*' ]
-  # pull_request:
-  #   branches: [ "main" ]
+  #   branches: 
+  #      - main
 
 jobs:
   publish_images:
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Build Image
       - name: Build image
-        run: docker build . -t johnpaulmanoza/coupoun-app-backend:latest
+        run: docker build . -t johnpaulmanoza/coupoun-app-backend:latest .
         
+      # 3. Push Image  
       - name: Push image to DockerHub
         run: |
           docker login -u johnpaulmanoza -p ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push johnpaulmanoza/coupoun-app-backend:latest
+
+      # 4. Add SSH
+      - name: Add SSH key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" | base64 --decode > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      #5. Deploy on EC2, access ENV from secrets      
+      - name: Deploy on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            # Install Docker if it is not installed
+              if ! command -v docker &> /dev/null; then
+                echo "Docker not found. Installing Docker..."
+                sudo apt-get update
+                sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+                sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+                sudo apt-get update
+                sudo apt-get install -y docker-ce
+                sudo usermod -aG docker $USER  # Add user to the docker group
+              else
+                echo "Docker is already installed."
+              fi
+
+            # Pull the latest image from Docker Hub
+            docker pull johnpaulmanoza/coupoun-app-backend:latest
+
+            # Stop and remove any existing container
+            docker stop coupon-app-backend || true
+            docker rm coupon-app-backend || true
+
+            # Run the Docker container with environment variables passed from secrets
+            docker run -d -p 80:3000 \
+              --name coupoun-app-backend \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_USER=${{ secrets.DB_USER }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              johnpaulmanoza/coupoun-app-backend:latest
+          EOF
