@@ -32,6 +32,7 @@ jobs:
       # 4. Add SSH
       - name: Add SSH key
         run: |
+          mkdir -p ~/.ssh  # Create the .ssh directory if it doesn't exist
           echo "${{ secrets.EC2_KEY }}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
